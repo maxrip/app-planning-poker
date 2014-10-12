@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+	<title>room</title>
+
+	<link href="/css/all.css" media="all" rel="stylesheet" type="text/css" />
+	<link href='http://fonts.googleapis.com/css?family=PT+Sans' rel='stylesheet' type='text/css'>
+	
+	
+
+</head>
+
+<body>
+
+	<header>
+		<h1>Planning poker</h1>
+	</header>
+	<sidebar class="sidebar">
+		<div class="b-users">
+		<h3>Сейчас в комнате</h3>
+			<ul class="users">
+				<!-- The chat messages will go here -->
+			</ul>
+		</div>
+	</sidebar>
+
+
+	<div id="main">
+		<div class="b-login">
+			<h2>Как вас зовут?</h2>
+			<form class="loginForm">
+				<input type="text" id="yourName" placeholder="Представьтесь пожалуйста" />
+				<span class="message"></span><br/>
+				<input type="submit" id="sEnterName" value="Отправить" />
+			</form>
+		</div>
+		
+		<div class="b-invite-textfield">
+		
+			<h3>Вас слишком мало,</h3>
+			<h5>Приласите друзей отправив им эту ссылку</h5>
+		
+			<div class="link">
+				<a title="Invite a friend" href="" id="link"></a>
+			</div>
+		
+		</div>
+		
+		<div class="b-start-round">
+			<h3>Описание раунда</h3>
+			<form class="startRoundForm">
+				<textarea name="iRoundInfo" id="iRoundInfo" cols="30" rows="3"></textarea><br/>
+				<input type="submit" id="yourEnter" value="Отправить" />
+			</form>
+		</div>
+
+
+		<div class="b-cart">
+			<div id="roud-info"></div>
+			<form id="choice-cart">
+				<ul class="b-carts">
+					<!-- список карт -->
+				</ul>
+			</form>
+			<ul class="b-carts-users">
+				<!-- список выбранных карт -->
+			</ul>
+			<a id="new-round" href="#">Начать новый раунд</a>
+		</div>
+	</div>
+
+
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/js/ejs.js"></script>
+	<script src="/js/template.js"></script>
+	<script src="/js/main.js"></script>
+	<!--[if (gte IE 6)&(lte IE 8)]>
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/selectivizr/1.0.2/selectivizr-min.js"></script>
+	<!--<![endif]-->
+</body>
+
+</html>
