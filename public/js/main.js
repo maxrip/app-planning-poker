@@ -1,4 +1,10 @@
-var socket
+
+if(typeof String.prototype.trim !== 'function') {
+  String.prototype.trim = function() {
+    return this.replace(/^\s+|\s+$/g, ''); 
+  }
+}
+
 $(function(){
 	var id = Number(window.location.pathname.match(/\/room\/(\d+)$/)[1]);
 
@@ -24,7 +30,6 @@ $(function(){
 
 
 	socket.on('peopleinroom', function(data){
-		console.log(data);
 		b_login.show()
 		b_carts_users.hide();
 		b_cart.hide();
@@ -99,11 +104,11 @@ $(function(){
 			$('#roud-info').text(data.roundInfo)
 		}
 		b_cart.show()
-		b_cart.on("change","input",function(){
+		b_cart.on("click","input",function(){
 			b_cart.find('li').addClass('disabled');
 			b_cart.find('input').prop("disabled");
 			$(this).parent().addClass('selected');
-			$('input',b_cart).off('change');
+			$('input',b_cart).off('click');
 			socket.emit('seleced-value', {i: $(this).val(), id: id});
 		})
 	})
@@ -124,3 +129,4 @@ $(function(){
 		}).show()
 	})
 });
+

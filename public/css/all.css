@@ -277,9 +277,17 @@ h3{
 	}
 	.cart{
 		display: inline-block;
+		position: relative;
 	}
 	.cart input{
-		display: none;
+		cursor: pointer;
+		height: 100%;
+		margin: 0;
+		opacity: 0;
+		filter: alpha(opacity=0);
+		padding: 0;
+		position: absolute;
+		width: 100%;
 	}
 	.cart .cart-button{
 		width: 30px;
@@ -290,10 +298,10 @@ h3{
 		display: inline-block;
 		border-radius: 4px;
 		text-align: center;
-		cursor: pointer;
 		-webkit-border-radius: 2px 2px;
 		border-radius: 2px 2px;
 		border: solid 1px rgb(153, 153, 153);
+		background: #ddd;
 		background: -moz-linear-gradient(top, #fff, #ddd);
 		background: -webkit-gradient(linear, 0% 0%, 0% 100%, #fff, #ddd);
 		background: -webkit-linear-gradient(top, #fff, #ddd);
@@ -304,6 +312,7 @@ h3{
 		text-shadow: 0px 1px 1px rgba(255,255,255,1);
 	}
 	.cart.selected .cart-button{
+		background: #ccc;
 		background: -moz-linear-gradient(top, #ccc, #ddd);
 		background: -webkit-gradient(linear, 0% 0%, 0% 100%, #ccc, #ddd);
 		background: -webkit-linear-gradient(top, #ccc, #ddd);
@@ -311,7 +320,7 @@ h3{
 		background: -ms-linear-gradient(top, #ccc, #ddd);
 		background: linear-gradient(top, #ccc, #ddd);
 	}
-	.cart.disabled .cart-button{
+	.cart.disabled input{
 		cursor: default;
 	}
 header{
