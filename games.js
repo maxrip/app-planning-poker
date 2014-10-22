@@ -61,7 +61,7 @@ var Game = function() {
 	}
 }
 
-var Room = function(io,roomId,connection){
+var Room = function(io,roomId){
 	var _users = {}
 
 	//методы
@@ -72,11 +72,6 @@ var Room = function(io,roomId,connection){
 
 	this.sendUpdateUsers = function (){
 		this.sendRoom('update-users',{users:_users});
-	}
-
-	this.sendCurentUser = function (id,type,data){
-		data=data || {};
-		connection[id].socket.emit(type,data);
 	}
 
 	this.clearUsers = function(){
