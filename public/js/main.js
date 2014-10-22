@@ -6,7 +6,7 @@ if(typeof String.prototype.trim !== 'function') {
 }
 
 $(function(){
-	var id = Number(window.location.pathname.match(/\/room\/(\d+)$/)[1]);
+	var roomId = Number(window.location.pathname.match(/\/room\/(\d+)$/)[1]);
 
 	 socket = io.connect('/socket');
 
@@ -23,13 +23,13 @@ $(function(){
 
 
 	socket.on('connect', function(){
-		socket.emit('load', id);
+		socket.emit('load', roomId);
 	});
 
 
 
 
-	socket.on('peopleinroom', function(data){
+	socket.on('showloginform', function(data){
 		b_login.show()
 		b_carts_users.hide();
 		b_cart.hide();
@@ -43,7 +43,7 @@ $(function(){
 				alert("Имя слишком короткое ;)");
 				return;
 			}
-			socket.emit('login', {user: name, id: id});
+			socket.emit('login', {name: name, roomId: roomId});
 			$('form',b_login).off('submit');
 			b_login.hide()
 		})
@@ -76,7 +76,7 @@ $(function(){
 				e.preventDefault();
 				var roundInfo = $('#iRoundInfo').val().trim()
 	
-				socket.emit('begin-round', {roundInfo: roundInfo, id: id});
+				socket.emit('begin-round', {roundInfo: roundInfo, roomId: roomId});
 				$('form',b_start_round).off('submit');
 				b_start_round.hide()
 				$('form',b_start_round).off('submit');
@@ -90,6 +90,7 @@ $(function(){
 
 	socket.on('invite', function(data){
 		b_invite_textfield.show();
+		b_start_round.hide();
 		b_invite_textfield.find('a').text(window.location.href);
 	})
 
@@ -108,8 +109,8 @@ $(function(){
 			b_cart.find('li').addClass('disabled');
 			b_cart.find('input').prop("disabled");
 			$(this).parent().addClass('selected');
-			$('input',b_cart).off('click');
-			socket.emit('seleced-value', {i: $(this).val(), id: id});
+			$('.b-cart').off('click','input');
+			socket.emit('seleced-value', {value: $(this).val(), roomId: roomId});
 		})
 	})
 
@@ -117,6 +118,7 @@ $(function(){
 
 
 	socket.on('finish-round', function(data){
+		b_cart.show();
 		b_carts.hide();
 		b_carts_users.html(ejs.render(template.users_cart, {
 			carts:data.carts,
@@ -125,7 +127,7 @@ $(function(){
 		})).show();
 		$('#new-round').on('click',function(e){
 			e.preventDefault();
-			socket.emit('reset-round', {id: id});
+			socket.emit('reset-round', {roomId: roomId});
 		}).show()
 	})
 });

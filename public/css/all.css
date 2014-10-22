@@ -331,6 +331,12 @@ header{
 	margin-bottom: 15px;
 	font-size:25px;
 }
+.user{
+	list-style: none;
+	padding: 0 1em;
+	margin-bottom: 0.5em;
+}
 .user.voted{
-	color: green;
+	color: #fff;
+	background: green;
 }
