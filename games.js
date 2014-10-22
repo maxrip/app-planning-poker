@@ -1,107 +1,112 @@
 
 var Game = function() {
-		_run = false;
-		_users = {};
-		_usersVoted = {};
-		_carts = [];
-		_roundInfo = '';
-
-	this.statusRound = function(){
-		return _run;
+	this._run = false;
+	this._users = {};
+	this._usersVoted = {};
+	this._carts = [];
+	this._roundInfo = '';
+}
+	Game.prototype.statusRound = function(){
+		return this._run;
 	}
 
-	this.startRound = function(users,carts,roundInfo) {
-		_users=users;
-		for(id in _users){
-			_users[id].isVoted=false;
+	Game.prototype.startRound = function(users,carts,roundInfo) {
+		this._users=users;
+		for(id in this._users){
+			this._users[id].isVoted=false;
 		}
-		_carts = carts || ["1/2", "1", "2", "3", "5", "8", "13", "20", "40", "100", "?", "∞"];
-		_roundInfo = roundInfo || "";
-		_run = true;
+		this._carts = carts || ["1/2", "1", "2", "3", "5", "8", "13", "20", "40", "100", "?", "∞"];
+		this._roundInfo = roundInfo || "";
+		this._run = true;
 		return true;
 	}
 
-	this.addUser = function(id){
-		_users[id].isVoted=false;
+	Game.prototype.addUser = function(id){
+		this._users[id].isVoted=false;
 	}
 
-	this.changeCarts = function(carts){
-		_carts = carts || _carts;
+	Game.prototype.changeCarts = function(carts){
+		this._carts = carts || this._carts;
 	}
 
-	this.getCarts = function(carts){
-		return _carts;
+	Game.prototype.getCarts = function(carts){
+		return this._carts;
 	}
 
-	this.getRoundInfo = function(){
-		return _roundInfo;
+	Game.prototype.getRoundInfo = function(){
+		return this._roundInfo;
 	}
 
-	this.userVoted = function(id,value) {
-		if(_users[id].isVoted){
+	Game.prototype.userVoted = function(id,value) {
+		if(this._users[id].isVoted){
 			return false;
 		}
-		_usersVoted[id]=value;
-		_users[id].isVoted = true;
+		this._usersVoted[id]=value;
+		this._users[id].isVoted = true;
 		return true;
 	}
 
-	this.isGameEnd = function(){
-		if(_run  ==  false){
+	Game.prototype.isGameEnd = function(){
+		if(this._run  ==  false){
 			return false;
 		}
-		for (var user in _users) {
-			if(_users[user].isVoted  ==  false){
+		for (var user in this._users) {
+			if(this._users[user].isVoted  ==  false){
 				return false;
 			}
 		}
 		return true;
 	}
-	this.getResult = function(){
-		for(user in _users){
-			_users[user].value=_usersVoted[user];
+	Game.prototype.getResult = function(){
+		for(user in this._users){
+			this._users[user].value=this._usersVoted[user];
 		}
-		return _users;
+		return this._users;
 	}
-}
+
 
 var Room = function(io,roomId,connection){
-	var _users = {}
+	this._users = {};
+	this.io=io;
+	this.roomId=roomId;
+	this.connection=connection;
+}
+
 
 	//методы
-	this.sendRoom = function(type,data){
+	Room.prototype.sendRoom = function(type,data){
 		data= data || {};
-		io.to(roomId).emit(type,data);
+		this.io.to(this.roomId).emit(type,data);
 	}
 
-	this.sendUpdateUsers = function (){
-		this.sendRoom('update-users',{users:_users});
+	Room.prototype.sendUpdateUsers = function (){
+		this.sendRoom('update-users',{users:this._users});
 	}
 
 
-	this.clearUsers = function(){
-		for(user in _users){
-			delete(_users[user].isVoted);
-			delete(_users[user].value);
+	Room.prototype.clearUsers = function(){
+		for(user in this._users){
+			delete(this._users[user].isVoted);
+			delete(this._users[user].value);
 		}
 	}
 
-	this.getUsers = function (){
-		return _users;
+	Room.prototype.getUsers = function (){
+		return this._users;
 	}
 
 	//события
-	this.onJoinUser = function(id,name){
-		connection[id].socket.join(roomId);
-		_users[id]={name:name};
+	Room.prototype.onJoinUser = function(id,name){
+		this.connection[id].socket.join(this.roomId);
+		this._users[id]={name:name};
 		this.sendUpdateUsers()
 	}
 
-	this.onDisconnectUser = function(id){
-		if(_users[id]){
-			_users[id]=null;
-			delete(_users[id]);
-			connection[id].socket.leave(roomId)
+	Room.prototype.onDisconnectUser = function(id){
+		if(this._users[id]){
+			this._users[id]=null;
+			delete(this._users[id]);
+			this.connection[id].socket.leave(this.roomId)
 			this.sendUpdateUsers();
 			if(this.count()==1){
 				this.sendRoom('invite');
@@ -109,14 +114,14 @@ var Room = function(io,roomId,connection){
 		}
 	}
 	//служебные
-	this.count = function(){
+	Room.prototype.count = function(){
 		var count=0;
-		for(user in _users){
+		for(user in this._users){
 			count++;
 		}
 		return count;
 	}
-}
+
 
 var Games = function(io){
 	var rooms = {},
