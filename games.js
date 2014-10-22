@@ -83,7 +83,6 @@ var Room = function(io,roomId,connection){
 		this.sendRoom('update-users',{users:this._users});
 	}
 
-
 	Room.prototype.clearUsers = function(){
 		for(user in this._users){
 			delete(this._users[user].isVoted);
@@ -113,6 +112,7 @@ var Room = function(io,roomId,connection){
 			}
 		}
 	}
+
 	//служебные
 	Room.prototype.count = function(){
 		var count=0;
@@ -123,154 +123,157 @@ var Room = function(io,roomId,connection){
 	}
 
 
-var Games = function(io){
-	var rooms = {},
-		games = {},
-		connection = {},
-		_io;
-	function createId(){
-		return Math.round((Math.random() * 1000000));
-	}
+var Games = function(){
+	this.rooms = {},
+	this.games = {},
+	this.connection = {},
+	this.io;
+}
 
-	function createRoom(roomId){
-		rooms[roomId] = {
-			"room":new Room(_io,roomId,connection),
+Games.prototype = {
+
+	createId: function(){
+		return Math.round((Math.random() * 1000000));
+	},
+
+	createRoom: function(roomId){
+		this.rooms[roomId] = {
+			"room":new Room(this.io,this.roomId,this.connection),
 			"game":new Game()
 		}
-	}
+	},
 
-	function sendCurentUser(id,type,data){
+	sendCurentUser: function(id,type,data){
 		data=data || {};
-		connection[id].socket.emit(type,data);
-	}
+		this.connection[id].socket.emit(type,data);
+	},
 
-	function destroyRoom(roomId){
-		rooms[roomId].rooms=null;
-		rooms[roomId].games=null;
-		rooms[roomId]=null;
-		delete(rooms[roomId])
-	}
+	destroyRoom: function(roomId){
+		this.rooms[roomId].rooms=null;
+		this.rooms[roomId].game=null;
+		this.rooms[roomId]=null;
+		delete(this.rooms[roomId])
+	},
 
-	function testGame(roomId){
-		if(rooms[roomId].game.isGameEnd()){
-			rooms[roomId].room.sendRoom('finish-round',{
-				users:rooms[roomId].game.getResult(),
-				carts:rooms[roomId].game.getCarts()
+	testGame: function(roomId){
+		if(this.rooms[roomId].game.isGameEnd()){
+			this.rooms[roomId].room.sendRoom('finish-round',{
+				users:this.rooms[roomId].game.getResult(),
+				carts:this.rooms[roomId].game.getCarts()
 			})
 		}
-	}
+	},
 
 	//события в игре
-	function onJoinRoom(roomId,id,name,socket){
-		if(rooms[roomId] === undefined){
-			createRoom(roomId);
+	onJoinRoom: function(roomId,id,name,socket){
+		if(this.rooms[roomId] === undefined){
+			this.createRoom(roomId);
 		}
-		rooms[roomId].room.onJoinUser(id,name);
-		connection[id].roomId = roomId;
-		if(rooms[roomId].room.count()==1){
+		this.rooms[roomId].room.onJoinUser(id,name);
+		this.connection[id].roomId = roomId;
+		if(this.rooms[roomId].room.count()==1){
 			//Всего один игрок отправляем инвайт
-			rooms[roomId].room.sendRoom('invite');
+			this.rooms[roomId].room.sendRoom('invite');
 		}else{
-			if(rooms[roomId].game.statusRound()){
+			if(this.rooms[roomId].game.statusRound()){
 				//Игра запущена, отправляем данные новому игроку
-				if(rooms[roomId].game.isGameEnd()){
+				if(this.rooms[roomId].game.isGameEnd()){
 					//Вывод результатов
-					rooms[roomId].room.sendRoom('finish-round',{
-					users:rooms[roomId].game.getResult(),
-					carts:rooms[roomId].game.getCarts()
+					this.rooms[roomId].room.sendRoom('finish-round',{
+					users:this.rooms[roomId].game.getResult(),
+					carts:this.rooms[roomId].game.getCarts()
 					})
 				}else{
 					//Вывод карт
-					rooms[roomId].game.addUser(id);
+					this.rooms[roomId].game.addUser(id);
 					socket.emit('begin-round',{
-						roundInfo:rooms[roomId].game.getRoundInfo(),
-						carts:rooms[roomId].game.getCarts()
+						roundInfo:this.rooms[roomId].game.getRoundInfo(),
+						carts:this.rooms[roomId].game.getCarts()
 					});
 				}
 			}else{
 				//Приглашение начать игру
-				rooms[roomId].room.sendRoom('offer-begin-round');
+				this.rooms[roomId].room.sendRoom('offer-begin-round');
 			}
 		}
-	}
+	},
 	
-	function onDisconnectUser(id){
-		var roomId=connection[id].roomId;
-		if(rooms[roomId]){
-			rooms[roomId].room.onDisconnectUser(id);
-			if(rooms[roomId].room.count()==0){
-				destroyRoom(roomId);
+	onDisconnectUser: function(id){
+		var roomId=this.connection[id].roomId;
+		if(this.rooms[roomId]){
+			this.rooms[roomId].room.onDisconnectUser(id);
+			if(this.rooms[roomId].room.count()==0){
+				this.destroyRoom(roomId);
 			}else{
-				testGame(roomId);
+				this.testGame(roomId);
 			}
 			
 		}
 		
-	}
-	function onBeginRound(roomId,id,roundInfo,socket,carts){
-
-		if(rooms[roomId].game.statusRound()){
+	},
+	onBeginRound: function(roomId,id,roundInfo,socket,carts){
+		if(this.rooms[roomId].game.statusRound()){
 			//sendCurentUser(id,'error',{message:"Игра уже запущена"})
 			return
 		}
-
-		if(rooms[roomId].room.count()<2){
+		if(this.rooms[roomId].room.count()<2){
 			//sendCurentUser(id,'error',{message:"Игру можно начать когда пользователей не меньше двух"})
 			return
 		}
 		//Запуску игры
-		rooms[roomId].game.startRound(rooms[roomId].room.getUsers(),carts,roundInfo);
+		this.rooms[roomId].game.startRound(this.rooms[roomId].room.getUsers(),carts,roundInfo);
 		//Проверка запущена игра или нет
-		if(rooms[roomId].game.statusRound()){
-			rooms[roomId].room.sendRoom('begin-round',{
+		if(this.rooms[roomId].game.statusRound()){
+			this.rooms[roomId].room.sendRoom('begin-round',{
 				roundInfo:roundInfo,
-				carts:rooms[roomId].game.getCarts()
+				carts:this.rooms[roomId].game.getCarts()
 			})
 		}
-	}
-	function onSelectValue(roomId,id,value){
-		if(rooms[roomId].game.userVoted(id,value)){
-			rooms[roomId].room.sendUpdateUsers();
-			testGame(roomId);
+	},
+
+	onSelectValue: function(roomId,id,value){
+		if(this.rooms[roomId].game.userVoted(id,value)){
+			this.rooms[roomId].room.sendUpdateUsers();
+			this.testGame(roomId);
 		}
-	}
+	},
 
-	function onGameReset(roomId){
-		rooms[roomId].games=new Game();
-		rooms[roomId].room.clearUsers();
-		rooms[roomId].room.sendUpdateUsers();
-		rooms[roomId].room.sendRoom('offer-begin-round');
+	onGameReset: function(roomId){
+		this.rooms[roomId].game=new Game();
+		this.rooms[roomId].room.clearUsers();
+		this.rooms[roomId].room.sendUpdateUsers();
+		this.rooms[roomId].room.sendRoom('offer-begin-round');
 	}
+}
 
-	_io=io.of('/socket').on('connection', function (socket) {
+module.exports = function(io){
+	games = new Games(io);
+	games.io=io.of('/socket').on('connection', function (socket) {
 		//Заносим в хешь сокет для общения с клиентом
-		connection[socket.id.toString()]={socket:socket};
+		games.connection[socket.id.toString()]={socket:socket};
 		socket.on("load",function(){
-			sendCurentUser(socket.id.toString(),"showloginform")
+			games.sendCurentUser(socket.id.toString(),"showloginform")
 		})
 
 		socket.on("disconnect",function(){
-			onDisconnectUser(socket.id.toString())
-			connection[socket.id.toString()]=null;
-			delete(connection[socket.id.toString()]);
+			games.onDisconnectUser(socket.id.toString())
+			games.connection[socket.id.toString()]=null;
+			delete(games.connection[socket.id.toString()]);
 		})
 
 		socket.on("login",function(data){
-			onJoinRoom(data.roomId,socket.id.toString(),data.name,socket);
+			games.onJoinRoom(data.roomId,socket.id.toString(),data.name,socket);
 		})
 
 		socket.on("begin-round",function(data){
-			onBeginRound(data.roomId,socket.id.toString(),data.roundInfo,socket);
+			games.onBeginRound(data.roomId,socket.id.toString(),data.roundInfo,socket);
 		})
 		
 		socket.on("seleced-value",function(data){
-			onSelectValue(data.roomId,socket.id.toString(),data.value);
+			games.onSelectValue(data.roomId,socket.id.toString(),data.value);
 		})
 		socket.on('reset-round', function(data) {
-			onGameReset(data.roomId);
+			games.onGameReset(data.roomId);
 		})
 	})
-}
-module.exports = function(app,io){
-	games = new Games(io);	
 }
