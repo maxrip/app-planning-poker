@@ -96,9 +96,23 @@ var Room = function(io,roomId,connection){
 
 	//события
 	Room.prototype.onJoinUser = function(id,name){
-		this.connection[id].socket.join(this.roomId);
-		this._users[id]={name:name};
-		this.sendUpdateUsers()
+		if (this.nameIsAvailable(name)){
+			this.connection[id].socket.join(this.roomId);
+			this._users[id]={name:name};
+			this.sendUpdateUsers()	
+			return true
+		}else{
+			return "Имя занято, попробуйте другое";
+		}
+	}
+
+	Room.prototype.nameIsAvailable = function(name){
+		for(id in this._users){
+			if(this._users[id].name == name){
+				return false;
+			}
+		}
+		return true;
 	}
 
 	Room.prototype.onDisconnectUser = function(id){
@@ -169,32 +183,36 @@ Games.prototype = {
 		if(this.rooms[roomId] === undefined){
 			this.createRoom(roomId);
 		}
-		this.rooms[roomId].room.onJoinUser(id,name);
-		this.connection[id].roomId = roomId;
-		if(this.rooms[roomId].room.count()==1){
-			//Всего один игрок отправляем инвайт
-			this.rooms[roomId].room.sendRoom('invite');
-		}else{
-			if(this.rooms[roomId].game.statusRound()){
-				//Игра запущена, отправляем данные новому игроку
-				if(this.rooms[roomId].game.isGameEnd()){
-					//Вывод результатов
-					this.rooms[roomId].room.sendRoom('finish-round',{
-					users:this.rooms[roomId].game.getResult(),
-					carts:this.rooms[roomId].game.getCarts()
-					})
-				}else{
-					//Вывод карт
-					this.rooms[roomId].game.addUser(id);
-					socket.emit('begin-round',{
-						roundInfo:this.rooms[roomId].game.getRoundInfo(),
-						carts:this.rooms[roomId].game.getCarts()
-					});
-				}
+		var status = this.rooms[roomId].room.onJoinUser(id,name);
+		if(status === true){
+			this.connection[id].roomId = roomId;
+			if(this.rooms[roomId].room.count()==1){
+				//Всего один игрок отправляем инвайт
+				this.rooms[roomId].room.sendRoom('invite');
 			}else{
-				//Приглашение начать игру
-				this.rooms[roomId].room.sendRoom('offer-begin-round');
+				if(this.rooms[roomId].game.statusRound()){
+					//Игра запущена, отправляем данные новому игроку
+					if(this.rooms[roomId].game.isGameEnd()){
+						//Вывод результатов
+						this.rooms[roomId].room.sendRoom('finish-round',{
+						users:this.rooms[roomId].game.getResult(),
+						carts:this.rooms[roomId].game.getCarts()
+						})
+					}else{
+						//Вывод карт
+						this.rooms[roomId].game.addUser(id);
+						socket.emit('begin-round',{
+							roundInfo:this.rooms[roomId].game.getRoundInfo(),
+							carts:this.rooms[roomId].game.getCarts()
+						});
+					}
+				}else{
+					//Приглашение начать игру
+					this.rooms[roomId].room.sendRoom('offer-begin-round');
+				}
 			}
+		}else{
+			this.sendCurentUser(id,"showloginform",{message:status})
 		}
 	},
 	
