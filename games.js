@@ -21,6 +21,10 @@ var Game = function() {
 		return true;
 	}
 
+	this.addUser = function(id){
+		_users[id].isVoted=false;
+	}
+
 	this.changeCarts = function(carts){
 		_carts = carts || _carts;
 	}
@@ -61,7 +65,7 @@ var Game = function() {
 	}
 }
 
-var Room = function(io,roomId){
+var Room = function(io,roomId,connection){
 	var _users = {}
 
 	//методы
@@ -73,6 +77,7 @@ var Room = function(io,roomId){
 	this.sendUpdateUsers = function (){
 		this.sendRoom('update-users',{users:_users});
 	}
+
 
 	this.clearUsers = function(){
 		for(user in _users){
@@ -171,6 +176,7 @@ var Games = function(io){
 					})
 				}else{
 					//Вывод карт
+					rooms[roomId].game.addUser(id);
 					socket.emit('begin-round',{
 						roundInfo:rooms[roomId].game.getRoundInfo(),
 						carts:rooms[roomId].game.getCarts()
