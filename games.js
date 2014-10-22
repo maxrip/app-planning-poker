@@ -267,7 +267,7 @@ Games.prototype = {
 module.exports = function(io){
 	games = new Games(io);
 	games.io=io.of('/socket').on('connection', function (socket) {
-		//Заносим в хешь сокет для общения с клиентом
+		//Заносим в хеш сокет для общения с клиентом
 		games.connection[socket.id.toString()]={socket:socket};
 		socket.on("load",function(){
 			games.sendCurentUser(socket.id.toString(),"showloginform")
